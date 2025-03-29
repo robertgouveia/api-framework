@@ -32,3 +32,7 @@ export class NotFound extends ErrorResponse implements IErrorResponse {
 export class BadRequest extends ErrorResponse implements IErrorResponse {
     constructor() { super('Bad Request', 400) }
 }
+
+export class MethodNotAllowed extends ErrorResponse implements IErrorResponse {
+    constructor() { super('Method Not Allowed', 405) }
+}

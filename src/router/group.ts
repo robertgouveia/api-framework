@@ -1,6 +1,6 @@
 import {IncomingMessage, ServerResponse} from "node:http";
 import {ILogger} from "../../utils/logger";
-import DB from "../database/db";
+import DB from "../../pkg/database/db";
 
 export default class Group {
     private readonly root: string;

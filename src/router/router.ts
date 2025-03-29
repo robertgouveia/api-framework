@@ -2,7 +2,7 @@ import Group from "./group";
 import {ErrorResponse, NotFound} from "../../utils/errors";
 import {IncomingMessage, ServerResponse} from "node:http";
 import {ILogger, LogLevel} from "../../utils/logger";
-import DB from "../database/db";
+import DB from "../../pkg/database/db";
 import {writeJSON} from "../../utils/json";
 
 export default class Router {
@@ -30,7 +30,7 @@ export default class Router {
 
             await middleware(this.logger, req, res, next);
         } catch (error: any) {
-            this.logger.log('MIDDLEWARE ERROR: ' + error.message, LogLevel.ERROR);
+            this.logger.log('Caught Error: ' + error.message, LogLevel.ERROR);
 
             if (error instanceof ErrorResponse) {
                 res.statusCode = error.statusCode;

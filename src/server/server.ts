@@ -20,13 +20,22 @@ export default class Server {
         this.db = client;
         this.router = new Router(this.logger, this.db);
 
-        this.server = http.createServer((req, res) => {
-            this.router.addGroup(new Group(this.logger, '/api/v1', (group: Group) => {
-                healthRoutes(group, this.db);
-            }));
+        this.server = http.createServer(async (req, res) => {
+            try {
+                this.router.addGroup(new Group(this.logger, '/api/v1', (group: Group) => {
+                    healthRoutes(group, this.db);
+                }));
 
-            this.router.mapRoutes(req, res, [loggerMiddleware]);
-        })
+                await this.router.mapRoutes(req, res, [loggerMiddleware]);
+            } catch (error: any) {
+                // Final fallback error handler
+                this.logger.log(`Unhandled error in request: ${error.message}`, LogLevel.ERROR);
+                if (!res.headersSent) {
+                    res.statusCode = 500;
+                    res.end(JSON.stringify({ error: 'Internal Server Error' }));
+                }
+            }
+        });
     }
 
     public start() {

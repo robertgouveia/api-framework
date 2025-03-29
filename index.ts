@@ -10,9 +10,15 @@ const start = async () => {
     const logger = new TextLogger(`${__dirname}/logs/log.txt`);
 
     const db = new DB();
-    const err = await db.connect();
 
-    if (err) await logger.log('Database ' + err, LogLevel.ERROR);
+    try {
+        await db.connect();
+        await db.migrate();
+        await logger.log('Database Migrated', LogLevel.INFO);
+    } catch (e: any) {
+        await logger.log('Database ' + e, LogLevel.ERROR);
+        return
+    }
 
     const port = parseFlags(process.argv.slice(2));
     const server = new Server(

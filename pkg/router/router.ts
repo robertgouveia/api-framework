@@ -1,12 +1,13 @@
 import Group from "./group";
-import {NotFound} from "../../utils/errors";
+import {ErrorResponse, NotFound} from "../../utils/errors";
 import {IncomingMessage, ServerResponse} from "node:http";
-import {ILogger} from "../../utils/logger";
+import {ILogger, LogLevel} from "../../utils/logger";
 import DB from "../database/db";
+import {writeJSON} from "../../utils/json";
 
 export default class Router {
     public routes: Map<string, (req: IncomingMessage, res: ServerResponse, logger: ILogger, db: DB) => void> = new Map();
-    private globalMiddlewares: ((logger: ILogger, req: IncomingMessage, res: ServerResponse, next: () => void) => void)[] = []
+    private globalMiddlewares: ((logger: ILogger, req: IncomingMessage, res: ServerResponse, next: () => void) => void | Promise<void>)[] = []
     private readonly logger: ILogger;
     private readonly db: DB;
 
@@ -15,13 +16,35 @@ export default class Router {
         this.db = db;
     }
 
-    public executeMiddleware(req: IncomingMessage, res: ServerResponse, index: number, finalHandler: (req: IncomingMessage, res: ServerResponse, logger: ILogger, db: DB) => void) {
-        if (index >= this.globalMiddlewares.length) return finalHandler(req, res, this.logger, this.db);
+    public async executeMiddleware(req: IncomingMessage, res: ServerResponse, index: number, finalHandler: (req: IncomingMessage, res: ServerResponse, logger: ILogger, db: DB) => void | Promise<void>) {
+        try {
+            if (index >= this.globalMiddlewares.length) {
+                await finalHandler(req, res, this.logger, this.db);
+                return;
+            }
 
-        const middleware = this.globalMiddlewares[index];
-        const next = () => this.executeMiddleware(req, res, index + 1, finalHandler);
+            const middleware = this.globalMiddlewares[index];
+            const next = async () => {
+                await this.executeMiddleware(req, res, index + 1, finalHandler);
+            };
 
-        middleware(this.logger, req, res, next);
+            await middleware(this.logger, req, res, next);
+        } catch (error: any) {
+            this.logger.log('MIDDLEWARE ERROR: ' + error.message, LogLevel.ERROR);
+
+            if (error instanceof ErrorResponse) {
+                res.statusCode = error.statusCode;
+                writeJSON(res, {
+                    'message': error.message,
+                }, error.statusCode)
+                return;
+            }
+
+            res.statusCode = 500;
+            writeJSON(res, {
+                'message': 'Internal Server Error',
+            }, 500)
+        }
     }
 
     public addGroup(group: Group) {
@@ -40,12 +63,12 @@ export default class Router {
         })
     }
 
-    public mapRoutes(req: IncomingMessage, res: ServerResponse, middlewares?: ((logger: ILogger, req: IncomingMessage, res: ServerResponse, next: () => void) => void)[]) {
+    public async mapRoutes(req: IncomingMessage, res: ServerResponse, middlewares?: ((logger: ILogger, req: IncomingMessage, res: ServerResponse, next: () => void) => void)[]) {
         middlewares && (this.globalMiddlewares = middlewares);
 
         const handler = this.routes.get(req.url ?? '/');
         if (!handler) return new NotFound(req.url ?? '/');
 
-        this.executeMiddleware(req, res, 0, handler);
+        await this.executeMiddleware(req, res, 0, handler);
     }
 }

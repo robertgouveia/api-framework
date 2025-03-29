@@ -16,7 +16,7 @@ export default class Group {
         routes(this);
     }
 
-    public addRoute(path: string, handler: (req: IncomingMessage, res: ServerResponse, logger: ILogger, db: DB) => void) {
+    public addRoute(path: string, handler: (req: IncomingMessage, res: ServerResponse, logger: ILogger, db: DB) => void | Promise<void>) {
         this.routes.set(this.root + path, handler);
     }
 

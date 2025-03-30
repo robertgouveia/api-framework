@@ -5,7 +5,7 @@ import DB from "../../pkg/database/db";
 export default class Group {
     private readonly root: string;
     public groups: Group[] = [];
-    public routes: Map<string, (req: IncomingMessage, res: ServerResponse, logger: ILogger, db: DB) => void> = new Map();
+    public routes: Map<string, Map<string, (req: IncomingMessage, res: ServerResponse, logger: ILogger, db: DB) => void>> = new Map();
     public logger: ILogger;
     public middleware?: ((logger: ILogger, req: IncomingMessage, res: ServerResponse, next: () => void) => void)[] = [];
 
@@ -17,7 +17,14 @@ export default class Group {
     }
 
     public addRoute(path: string, handler: (req: IncomingMessage, res: ServerResponse, logger: ILogger, db: DB) => void | Promise<void>) {
-        this.routes.set(this.root + path, handler);
+        const fullPath = this.root + (path === '/' ? '' : path);
+
+        if (!this.routes.has(fullPath)) {
+            this.routes.set(fullPath, new Map());
+        }
+
+        const route = this.routes.get(fullPath);
+        route?.set(handler.name, handler);
     }
 
     public addGroup(logger: ILogger, root: string, routes: (group: Group) => void, middleware?: ((logger: ILogger, req: IncomingMessage, res: ServerResponse, next: () => void) => void)[]): Group {

@@ -4,7 +4,7 @@ import Router from "../router/router";
 import Group from "../router/group";
 import loggerMiddleware from "../middleware/loggingMiddleware";
 import healthRoutes from "../routes/health/routes";
-import authRoutes from "../routes/auth/routes";
+import authRoutes from "../routes/auth/register/routes";
 import DB from "../../pkg/database/db";
 import {writeJSON} from "../../utils/json";
 
@@ -22,16 +22,18 @@ export default class Server {
         this.db = client;
         this.router = new Router(this.logger, this.db);
 
+        this.router.addGroup(new Group(this.logger, '/api/v1', (group: Group) => {
+            healthRoutes(group);
+
+            group.addGroup(this.logger, '/auth', (group: Group) => {
+                group.addGroup(this.logger, '/register', (group: Group) => {
+                    authRoutes(group);
+                })
+            });
+        }));
+
         this.server = http.createServer(async (req, res) => {
             try {
-                this.router.addGroup(new Group(this.logger, '/api/v1', (group: Group) => {
-                    healthRoutes(group);
-
-                    group.addGroup(this.logger, '/auth', (group: Group) => {
-                        authRoutes(group);
-                    });
-                }));
-
                 await this.router.mapRoutes(req, res, [loggerMiddleware]);
 
                 if (!res.headersSent) {

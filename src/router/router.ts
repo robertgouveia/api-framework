@@ -1,12 +1,12 @@
 import Group from "./group";
-import {ErrorResponse, NotFound} from "../../utils/errors";
+import {ErrorResponse, MethodNotAllowed, NotFound} from "../../utils/errors";
 import {IncomingMessage, ServerResponse} from "node:http";
 import {ILogger, LogLevel} from "../../utils/logger";
 import DB from "../../pkg/database/db";
 import {writeJSON} from "../../utils/json";
 
 export default class Router {
-    public routes: Map<string, (req: IncomingMessage, res: ServerResponse, logger: ILogger, db: DB) => void> = new Map();
+    public routes: Map<string, Map<string, (req: IncomingMessage, res: ServerResponse, logger: ILogger, db: DB) => void>> = new Map();
     private globalMiddlewares: ((logger: ILogger, req: IncomingMessage, res: ServerResponse, next: () => void) => void | Promise<void>)[] = []
     private readonly logger: ILogger;
     private readonly db: DB;
@@ -69,6 +69,9 @@ export default class Router {
         const handler = this.routes.get(req.url ?? '/');
         if (!handler) return new NotFound(req.url ?? '/');
 
-        await this.executeMiddleware(req, res, 0, handler);
+        const routeHandler = handler.get(req.method ?? '/') ?? handler.get('GET');
+        if (!routeHandler) return new MethodNotAllowed();
+
+        await this.executeMiddleware(req, res, 0, routeHandler);
     }
 }

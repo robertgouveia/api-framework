@@ -20,8 +20,6 @@ const start = async () => {
         return
     }
 
-    console.log('hit');
-
     const port = parseFlags(process.argv.slice(2));
     const server = new Server(
         db,

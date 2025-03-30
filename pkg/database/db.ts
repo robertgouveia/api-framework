@@ -64,7 +64,7 @@ export default class DB {
             const result = await this.Client.query('SELECT COUNT(*) FROM migration');
             if (result.rows[0].count === migrations.length) return;
 
-            migrations = migrations.slice(result.rows[0].count, migrations.length);
+            migrations = migrations.slice(direction === 'up' ? result.rows[0].count : 0, migrations.length);
 
             for (const migration of migrations) {
                 console.log(`Migrating ${direction === 'up' ? 'up' : 'down'} to ${migration.name}`);

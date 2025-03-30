@@ -67,10 +67,10 @@ export default class Router {
         middlewares && (this.globalMiddlewares = middlewares);
 
         const handler = this.routes.get(req.url ?? '/');
-        if (!handler) return new NotFound(req.url ?? '/');
+        if (!handler) throw new NotFound('Route not found');
 
         const routeHandler = handler.get(req.method ?? '/') ?? handler.get('GET');
-        if (!routeHandler) return new MethodNotAllowed();
+        if (!routeHandler) throw new MethodNotAllowed();
 
         await this.executeMiddleware(req, res, 0, routeHandler);
     }

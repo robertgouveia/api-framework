@@ -3,10 +3,12 @@ import {ConsoleLogger, ILogger, LogLevel} from "../../utils/logger";
 import Router from "../router/router";
 import Group from "../router/group";
 import loggerMiddleware from "../middleware/loggingMiddleware";
-import healthRoutes from "../routes/health/routes";
+import healthRoutes from "../routes/health/delivery/routes";
 import authRoutes from "../routes/auth/register/routes";
+import verifyRoutes from "../routes/auth/verify/routes";
 import DB from "../../pkg/database/db";
 import {writeJSON} from "../../utils/json";
+import {ErrorResponse} from "../../utils/errors";
 
 export default class Server {
     private readonly port: number = 3000;
@@ -26,25 +28,23 @@ export default class Server {
             healthRoutes(group);
 
             group.addGroup(this.logger, '/auth', (group: Group) => {
-                group.addGroup(this.logger, '/register', (group: Group) => {
-                    authRoutes(group);
-                })
+                authRoutes(group);
+                verifyRoutes(group);
             });
         }));
-
-        console.log(this.router.routes);
 
         this.server = http.createServer(async (req, res) => {
             try {
                 await this.router.mapRoutes(req, res, [loggerMiddleware]);
-
-                if (!res.headersSent) {
+            } catch (error: any) {
+                if (error instanceof ErrorResponse) {
+                    res.statusCode = error.statusCode;
                     writeJSON(res, {
-                        'message': 'Not Found',
-                    }, 404)
+                        'message': error.message,
+                    }, error.statusCode)
                     return;
                 }
-            } catch (error: any) {
+
                 this.logger.log(`Unhandled error in request: ${error.message}`, LogLevel.ERROR);
                 if (!res.headersSent) {
                     res.statusCode = 500;

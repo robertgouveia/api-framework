@@ -1,5 +1,5 @@
 import pg from 'pg';
-import * as fs from "node:fs/promises"; // Use promises version of fs
+import * as fs from "node:fs/promises";
 
 // TODO: make runtime compliant
 export default class DB {
@@ -34,30 +34,45 @@ export default class DB {
         return resp.rows.length > 0;
     }
 
-    public async migrate() {
+    public async getMigrations(): Promise< { index: number, sql: string, name: string }[]> {
         if (!await this.pingConnection()) throw new Error('Database connection is not available');
 
+        const files = await fs.readdir(`${__dirname}/migrations`);
+        let migrations: { index: number, sql: string, name: string }[] = [];
+
+        for (const file of files) {
+            const parts = file.split('_');
+            const index = parseInt(parts[0], 10);
+            const ext = file.split('.').pop();
+            const name = parts.slice(1, parts.length).join(' ').split('.')[0];
+            if (ext !== 'sql') continue;
+
+            const sql = await fs.readFile(`${__dirname}/migrations/${file}`, 'utf8');
+            migrations.push({index, sql, name});
+        }
+
+        migrations.sort((a, b) => a.index - b.index);
+        return migrations;
+    }
+
+    public async migrate(direction: 'up' | 'down' = 'up') {
         try {
-            const files = await fs.readdir(`${__dirname}/migrations`);
-            const migrations: { index: number, sql: string, name: string }[] = [];
+            let migrations = await this.getMigrations();
+            let migrationTable = migrations[0].sql;
+            direction === 'up' && await this.Client.query(migrationTable.split('-- up')[1]);
 
-            for (const file of files) {
-                const parts = file.split('_');
-                const index = parseInt(parts[0], 10);
-                const ext = file.split('.').pop();
-                const name = parts.slice(1, parts.length).join(' ').split('.')[0];
-                if (ext !== 'sql') continue;
+            const result = await this.Client.query('SELECT COUNT(*) FROM migration');
+            if (result.rows[0].count === migrations.length) return;
 
-                const sql = await fs.readFile(`${__dirname}/migrations/${file}`, 'utf8');
-                migrations.push({index, sql, name});
-            }
-
-            migrations.sort((a, b) => a.index - b.index);
+            migrations = migrations.slice(result.rows[0].count, migrations.length);
 
             for (const migration of migrations) {
-                await this.Client.query('INSERT INTO migration (name) VALUES ($1)', [migration.name]);
-                await this.Client.query(migration.sql);
+                console.log(`Migrating ${direction === 'up' ? 'up' : 'down'} to ${migration.name}`);
+                await this.Client.query(migration.sql.split('-- up')[direction === 'up' ? 1 : 0]);
+                direction === 'up' && await this.Client.query('INSERT INTO migration (name) VALUES ($1)', [migration.name]);
             }
+
+            if (direction === 'down') await this.Client.query(migrationTable.split('-- up')[0]);
         } catch (err) {
             console.error('Error during migration:', err);
         }

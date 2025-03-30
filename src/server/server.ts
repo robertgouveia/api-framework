@@ -32,6 +32,8 @@ export default class Server {
             });
         }));
 
+        console.log(this.router.routes);
+
         this.server = http.createServer(async (req, res) => {
             try {
                 await this.router.mapRoutes(req, res, [loggerMiddleware]);

@@ -7,6 +7,6 @@ export default function loggerMiddleware(
     res: ServerResponse,
     next: (req: IncomingMessage, res: ServerResponse) => void
 ): void {
-    logger.log('HIT ' + req.url);
+    logger.log('HIT ' + req.method + ' ' + req.url);
     next(req, res);
 }

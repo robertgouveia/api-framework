@@ -12,5 +12,13 @@ export interface User {
     id: number;
     email: string;
     password: string;
-    code: number;
+    verified: boolean;
+    last_login: Date | null;
+}
+
+export interface Verify {
+    id: number;
+    email: string;
+    code: string;
+    expires: Date;
 }

@@ -4,8 +4,9 @@ import Router from "../router/router";
 import Group from "../router/group";
 import loggerMiddleware from "../middleware/loggingMiddleware";
 import healthRoutes from "../routes/health/delivery/routes";
-import authRoutes from "../routes/auth/register/routes";
+import registerRoute from "../routes/auth/register/routes";
 import verifyRoutes from "../routes/auth/verify/routes";
+import loginRoute from "../routes/auth/login/routes";
 import DB from "../../pkg/database/db";
 import {writeJSON} from "../../utils/json";
 import {ErrorResponse} from "../../utils/errors";
@@ -28,7 +29,8 @@ export default class Server {
             healthRoutes(group);
 
             group.addGroup(this.logger, '/auth', (group: Group) => {
-                authRoutes(group);
+                registerRoute(group);
+                loginRoute(group);
                 verifyRoutes(group);
             });
         }));

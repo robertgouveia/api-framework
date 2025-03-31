@@ -5,6 +5,8 @@
     <file url="file://$PROJECT_DIR$/pkg/database/migrations/1_add_migrations_table.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/pkg/database/migrations/2_add_users_table.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/pkg/database/migrations/3_add_verification_table.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/pkg/database/migrations/4_add_session_table.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/routes/auth/login/handlers.ts" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/src/routes/auth/register/handlers.ts" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/src/routes/auth/verify/handlers.ts" dialect="GenericSQL" />
   </component>

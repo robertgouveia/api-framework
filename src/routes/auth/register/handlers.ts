@@ -10,6 +10,7 @@ export async function POST(req: IncomingMessage, res: ServerResponse, logger: IL
     if (req.method !== 'POST') throw new MethodNotAllowed();
 
     const payload = await readJSON<{ email: string, password: string }>(req) as RegisterUserDTO;
+    if (!payload.email || !payload.password) throw new BadRequest();
 
     const result = await db.Client.query('SELECT * FROM "user" WHERE email = $1', [payload.email]);
     const user = result.rows[0] as User;

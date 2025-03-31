@@ -58,6 +58,8 @@ export default class DB {
     public async migrate(direction: 'up' | 'down' = 'up') {
         try {
             let migrations = await this.getMigrations();
+            if (direction === 'down') migrations = migrations.reverse();
+
             let migrationTable = migrations[0].sql;
             direction === 'up' && await this.Client.query(migrationTable.split('-- up')[1]);
 

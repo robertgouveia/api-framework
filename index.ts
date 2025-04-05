@@ -30,7 +30,7 @@ const start = async () => {
     try {
         await db.connect();
         //await db.migrate(); -- for migrations
-        await logger.log('Database Migrated', LogLevel.INFO);
+        //await logger.log('Database Migrated', LogLevel.INFO);
     } catch (e: any) {
         await logger.log('Database ' + e, LogLevel.ERROR);
         return

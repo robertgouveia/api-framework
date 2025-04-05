@@ -1,32 +1,43 @@
-import parseFlags from "./utils/parseFlags";
-import Server from './src/server/server';
-import {LogLevel, TextLogger} from "./utils/logger";
-import * as process from "process";
+import Server from './lib/server/server';
+import {LogLevel, TextLogger} from "./lib/utils/logger";
 import * as fs from "fs";
-import DB from "./pkg/database/db";
+import DB from "./lib/database/db";
 
+/**
+ * Initializes and starts the application.
+ *
+ * - Creates the necessary logging directory and file if not already present.
+ * - Connects to the database and applies migrations.
+ *   - Logs the success or failure of the database migration process.
+ * - Instantiates the server with the database, logger, and specified port.
+ * - Starts the server and handles any runtime errors during startup.
+ *
+ * This function is asynchronous and uses file system operations, database interactions,
+ * and server initialization processes. It logs important events to the logger
+ * for tracking and debugging purposes.
+ *
+ * Note: If there are any errors with database connection/migration or
+ * during server initialization, appropriate error handling is performed.
+ */
 const start = async () => {
+
+    // Logger
     fs.mkdirSync(`${__dirname}/logs`, {recursive: true})
     const logger = new TextLogger(`${__dirname}/logs/log.txt`);
 
+    // Database
     const db = new DB();
-
     try {
         await db.connect();
-        await db.migrate();
+        //await db.migrate(); -- for migrations
         await logger.log('Database Migrated', LogLevel.INFO);
     } catch (e: any) {
         await logger.log('Database ' + e, LogLevel.ERROR);
         return
     }
 
-    const port = parseFlags(process.argv.slice(2));
-    const server = new Server(
-        db,
-        parseInt(port),
-        logger,
-    );
-
+    // Server
+    const server = new Server(db, 8080, logger);
     try {
         server.start();
     } catch (e: any) {

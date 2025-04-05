@@ -1,8 +1,8 @@
 {
   "scripts": {
-    "build": "tsc && npm run migrate > /dev/null 2>&1",
-    "dev": "npm run build > /dev/null 2>&1 && node dist/index.js --port 8080",
-    "migrate": "rm -rf dist/pkg/database/migrations > /dev/null 2>&1 && cp -r lib/database/migrations dist/pkg/database > /dev/null 2>&1"
+    "build": "tsc && npm run migrate",
+    "dev": "npm run build && node dist/index.js --port 8080",
+    "migrate": "if exist dist\\pkg\\database\\migrations rmdir /s /q dist\\pkg\\database\\migrations && xcopy /s /e /y lib\\database\\migrations dist\\pkg\\database\\migrations\\"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

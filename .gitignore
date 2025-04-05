@@ -1,0 +1,10 @@
+
+# Ignore Visual Studio Code folder
+.vscode/
+
+# Ignore JetBrains IDE folders (e.g., WebStorm, IntelliJ)
+.idea/
+
+# Ignore Sublime Text project files and settings
+*.sublime-workspace
+*.sublime-project

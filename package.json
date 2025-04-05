@@ -2,7 +2,7 @@
   "scripts": {
     "build": "tsc && npm run migrate",
     "dev": "npm run build && node dist/index.js --port 8080",
-    "migrate": "rimraf dist\\pkg\\database\\migrations && cpx \"lib\\database\\migrations\\**\\*\" dist\\pkg\\database\\migrations"
+    "migrate": "rimraf \"dist/lib/database/migrations\" && cpx \"lib/database/migrations/**/*\" \"dist/lib/database/migrations\""
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

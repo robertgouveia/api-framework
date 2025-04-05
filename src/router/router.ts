@@ -6,8 +6,8 @@ import DB from "../../pkg/database/db";
 import {writeJSON} from "../../utils/json";
 
 export default class Router {
-    public routes: Map<string, Map<string, (req: IncomingMessage, res: ServerResponse, logger: ILogger, db: DB) => void>> = new Map();
-    private globalMiddlewares: ((logger: ILogger, req: IncomingMessage, res: ServerResponse, next: () => void) => void | Promise<void>)[] = []
+    public routes: Map<string, Map<string, ((req: IncomingMessage, res: ServerResponse, logger: ILogger, db: DB) => void) | (() => void)>> = new Map();
+    private globalMiddlewares: ((logger: ILogger, req: IncomingMessage, res: ServerResponse, db: DB, next: () => void) => void | Promise<void>)[] = []
     private readonly logger: ILogger;
     private readonly db: DB;
 
@@ -28,7 +28,7 @@ export default class Router {
                 await this.executeMiddleware(req, res, index + 1, finalHandler);
             };
 
-            await middleware(this.logger, req, res, next);
+            await middleware(this.logger, req, res, this.db, next);
         } catch (error: any) {
             this.logger.log('Caught Error: ' + error.message, LogLevel.ERROR);
 
@@ -63,7 +63,7 @@ export default class Router {
         })
     }
 
-    public async mapRoutes(req: IncomingMessage, res: ServerResponse, middlewares?: ((logger: ILogger, req: IncomingMessage, res: ServerResponse, next: () => void) => void)[]) {
+    public async mapRoutes(req: IncomingMessage, res: ServerResponse, middlewares?: ((logger: ILogger, req: IncomingMessage, res: ServerResponse, db: DB, next: () => void) => void)[]) {
         middlewares && (this.globalMiddlewares = middlewares);
 
         const handler = this.routes.get(req.url ?? '/');
@@ -71,7 +71,6 @@ export default class Router {
 
         const routeHandler = handler.get(req.method ?? '/') ?? handler.get('GET');
         if (!routeHandler) throw new MethodNotAllowed();
-
         await this.executeMiddleware(req, res, 0, routeHandler);
     }
 }

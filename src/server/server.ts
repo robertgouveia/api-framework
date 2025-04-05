@@ -3,13 +3,15 @@ import {ConsoleLogger, ILogger, LogLevel} from "../../utils/logger";
 import Router from "../router/router";
 import Group from "../router/group";
 import loggerMiddleware from "../middleware/loggingMiddleware";
-import healthRoutes from "../routes/health/delivery/routes";
+import healthRoutes from "../routes/health/routes";
 import registerRoute from "../routes/auth/register/routes";
 import verifyRoutes from "../routes/auth/verify/routes";
 import loginRoute from "../routes/auth/login/routes";
+import userRoute from "../routes/user/routes";
 import DB from "../../pkg/database/db";
 import {writeJSON} from "../../utils/json";
 import {ErrorResponse} from "../../utils/errors";
+import protectedMiddleware from "../middleware/protectedMiddleware";
 
 export default class Server {
     private readonly port: number = 3000;
@@ -25,15 +27,23 @@ export default class Server {
         this.db = client;
         this.router = new Router(this.logger, this.db);
 
-        this.router.addGroup(new Group(this.logger, '/api/v1', (group: Group) => {
+        // unprotected
+        this.router.addGroup(new Group(this.db, this.logger, '/api/v1', (group: Group) => {
             healthRoutes(group);
 
-            group.addGroup(this.logger, '/auth', (group: Group) => {
+            group.addGroup(this.db, this.logger, '/auth', (group: Group) => {
                 registerRoute(group);
                 loginRoute(group);
                 verifyRoutes(group);
             });
         }));
+
+        // protected
+        this.router.addGroup(new Group(this.db, this.logger, '/api/v1', (group: Group) => {
+            userRoute(group);
+        }, [protectedMiddleware]))
+
+        console.log(this.router.routes);
 
         this.server = http.createServer(async (req, res) => {
             try {

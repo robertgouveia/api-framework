@@ -22,3 +22,8 @@ export interface Verify {
     code: string;
     expires: Date;
 }
+
+export interface UserSession {
+    id: number;
+    email: string;
+}

@@ -25,12 +25,8 @@ export default class DB {
      * or a string representing the error code if the connection fails.
      */
     public async connect(): Promise<string | null> {
-        try {
-            await this.Client.connect();
-            return null;
-        } catch (e: any) {
-            return e.code;
-        }
+        await this.Client.connect();
+        return null;
     }
 
     /**

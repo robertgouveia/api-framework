@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "build": "tsc && npm run migrate > /dev/null 2>&1",
+    "dev": "npm run build > /dev/null 2>&1 && node dist/index.js --port 8080",
+    "migrate": "rm -rf dist/pkg/database/migrations > /dev/null 2>&1 && cp -r lib/database/migrations dist/pkg/database > /dev/null 2>&1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^22.13.14",
+    "@types/pg": "^8.11.11",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.14.1"
+  }
+}

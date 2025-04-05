@@ -30,7 +30,6 @@ export async function PUT(req: IncomingMessage, res: ServerResponse, logger: ILo
     result = await db.Client.query('SELECT * FROM "verification" WHERE email = $1', [payload.email]);
     const verify = result.rows[0] as Verify;
 
-    console.log(payload, verify);
     if (!user || verify.code !== payload.code) {
         await db.Client.query('BEGIN');
         await db.Client.query('DELETE FROM "verification" WHERE email = $1', [payload.email]);

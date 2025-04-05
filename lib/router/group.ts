@@ -19,7 +19,6 @@ export default class Group {
     constructor(db: DB, logger: ILogger, root: string, routes: (group: Group) => void, middleware?: ((logger: ILogger, req: IncomingMessage, res: ServerResponse, db: DB, next: (req: IncomingMessage, res: ServerResponse) => void) => Promise<void> | void)[]) {
         middleware && (this.middleware = middleware);
         this.db = db;
-        console.log(this.middleware);
         this.logger = logger;
         this.root = root;
         routes(this);

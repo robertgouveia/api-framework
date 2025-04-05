@@ -2,14 +2,16 @@
   "scripts": {
     "build": "tsc && npm run migrate",
     "dev": "npm run build && node dist/index.js --port 8080",
-    "migrate": "if exist dist\\lib\\database\\migrations rmdir /s /q dist\\lib\\database\\migrations && xcopy /s /e /y lib\\database\\migrations dist\\lib\\database\\migrations\\"
+    "migrate": "rimraf dist/pkg/database/migrations && cpx \"lib/database/migrations/**/*\" dist/pkg/database/migrations"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.13.14",
     "@types/pg": "^8.11.11",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "rimraf": "^5.0.0",
+    "cpx": "^1.5.0"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
